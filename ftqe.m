@@ -1,0 +1,1 @@
+function [e] =ftqe(t,SNK)
