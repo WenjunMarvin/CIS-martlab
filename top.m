@@ -1,75 +1,106 @@
-N= 10;              % number of PU
-f=6000000;          % sampling frequency
-Pdleast = 0.98; % least needed Pd
-Pfa=0.03;
-PHo=0.6;
-PHi=0.4;
+clear all;
+close all;
+
+
+
+Nc= 10;              % number of PU
+fs=6000000;          % sampling frequency
+Pds = 0.98; % least needed Pd
+%Pfa=0.03;
+
 i= 15;          % chanel number 
 T = 0.02;       % frame duration 
-M=0;            % Mean
-n=20;
-SNR=[-30:0.1:0]; 
+
+Pf=0.01:0.01:1;  % X-axis
+SNR_db=-10; 
+SNR=0.1;
 %var= ;          % Variance
 %N0= x;          %  noise power
 %n=`
-
-%Var= N0^2/2;
-
+sz= size(Pf);
+Pdsys=zeros(sz);
 
 SU=ones(20);
 PU=[1 1 1 0 0 0 0 0 0 0 ;
-    1 1 1 1 0 0 0 0 0 0 ;
+    1 1 1 0 0 0 0 0 0 0 ;
     0 0 1 1 1 0 0 0 0 0 ;
-    1 1 1 1 1 0 0 0 0 0 ;
-    1 1 1 1 1 1 1 1 1 1 ;
-    0 0 0 0 0 1 1 1 1 1 ;
-    0 0 0 0 0 0 1 1 0 0 ;
-    0 0 0 0 0 0 0 1 1 0 ;
-    0 0 0 0 0 0 0 0 1 1 ;
-    1 1 1 1 0 0 0 0 0 0 ;
+    0 0 1 1 1 0 0 0 0 0 ;
+    0 0 0 0 1 1 1 0 0 0 ;
+    0 0 0 0 0 0 1 1 1 0 ;
+    0 0 0 0 0 0 1 1 1 0 ;
+    0 0 0 0 0 0 0 1 1 1 ;
+    0 0 0 0 0 0 0 1 1 1 ;
+    1 1 1 0 0 0 0 0 0 0 ;
     0 0 0 1 1 1 0 0 0 0 ;
-    0 0 0 0 0 1 1 1 1 0 ;
-    0 0 0 1 1 1 1 0 0 0 ;
-    0 0 1 1 1 0 0 0 0 0 ;
-    0 0 0 0 0 0 1 1 1 1 ;];
+    0 0 0 0 0 1 1 1 0 0 ;
+    1 1 1 0 0 0 0 0 0 0 ;
+    0 0 0 1 1 1 0 0 0 0 ;
+    0 0 0 0 0 0 0 1 1 1 ;
+     0 0 0 1 1 1 0 0 0 0 ;
+    0 0 0 0 0 1 1 1 0 0 ;
+    1 1 1 0 0 0 0 0 0 0 ;
+    1 1 1 0 0  0 0 0 0 0 ;
+    0 0 0 0 0 0 0 1 1 1;
+];
 
-CRN(N)=0;
-for i=1:N 
+for i=1:Nc 
     CRN(i)= (sum(PU(:,i)==1));
 end    
 
 
 
 
+for i=1:Nc
+Pdsingle(i)= 1-(1-0.98)^(1/CRN(i));
+end
+N=floor(2*(qfuncinv(0.03)-qfuncinv(0.98))^(2)*SNR^(-2)); %minimum N 
+ for i=1:10
+e(i)=finde(CRN(i));
+ end
 
 
+for i = 1:length(Pf)
 
+  
+   gp(i)=0;
+     
+    for sa=1: N
+     
+     n = randn(1,N); % noise 
+     s = (SNR).*randn(1,N); % Primary User Signal
+     y= s + n; % pu present and adding noise 
+     
+     
+     energy = abs(y).^2; % Energy of received signal over N samples
+     energy_in(sa) =(1/N).*sum(energy); % Test Statistic for the energy detection
+        thresh(i) = (qfuncinv(Pf(i))./sqrt(N))+ 1;
+      
+              if(energy_in(sa)>=thresh(i))
+          gp(i) = gp(i)+1;
+              end
+    end 
+      Pd(i) =gp(i)/N; 
+   
+ end  
+subplot (1,2,1)
+plot(smooth(Pf,20),smooth(Pd,20)) ;
+xlabel('Pf')
+ylabel('Pd')
+legend('Single CR');
+hold on 
 
+for i = 1:Nc
+Pmuld=1-(1-Pd).^(CRN(i));
+Pdsys=Pdsys+Pmuld;
+subplot (1,2,1)
+plot(smooth(Pf,20),smooth(Pmuld,20)) ;
+hold on 
+end
 
+Pdsys= Pdsys/10;
+subplot (1,2,2)
+plot(smooth(Pf,20),smooth(Pd,20)) ;
 
-
-
-
-
-u1 =randn(1,n)+1i*randn(1,n);
-u2 =randn(1,n)+1i*randn(1,n);
-u3 =randn(1,n)+1i*randn(1,n);
-u4 =randn(1,n)+1i*randn(1,n);
-u5 =randn(1,n)+1i*randn(1,n);
-u6 =randn(1,n)+1i*randn(1,n);
-u7 =randn(1,n)+1i*randn(1,n);
-u8 =randn(1,n)+1i*randn(1,n);
-u9 =randn(1,n)+1i*randn(1,n);
-u10 =randn(1,n)+1i*randn(1,n);
-u11 =randn(1,n)+1i*randn(1,n);
-u12 =randn(1,n)+1i*randn(1,n);
-u13 =randn(1,n)+1i*randn(1,n);
-u14 =randn(1,n)+1i*randn(1,n);
-u15 =randn(1,n)+1i*randn(1,n);
-u16 =randn(1,n)+1i*randn(1,n);
-u17 =randn(1,n)+1i*randn(1,n);
-u18 =randn(1,n)+1i*randn(1,n);
-u19 =randn(1,n)+1i*randn(1,n);
-u20 =randn(1,n)+1i*randn(1,n);
-
-u=[u1;u2;u3;u4;u5;u6;u7;u8;u9;u10;u11;u12;u13;u14;u15;u16;u17;u18;u19;u20];
+hold on
+plot(smooth(Pf,20),smooth(Pdsys,20)) ;
+legend('Single CR','General Sys')
